@@ -1,6 +1,12 @@
+import "dotenv/config.js";
+
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import fs from "fs";
+
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+import { TaskType } from "@google/generative-ai";
+import { PineconeStore } from "@langchain/pinecone";
+import { Pinecone as PineconeClient } from "@pinecone-database/pinecone";
 
 try {
   //   const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&explaintext=true&titles=July_Revolution_(Bangladesh)&origin=*`;
@@ -26,6 +32,28 @@ try {
     separators: ["\n\n", "\n", " ", ""],
     chunkOverlap: 50,
   });
+  //   splitted txt file
   const output = await splitter.createDocuments([text]);
-  console.log(output.length);
-} catch (error) {}
+
+  const googleApiKey = process.env.GOOGLE_API_KEY;
+
+  const embeddings = new GoogleGenerativeAIEmbeddings({
+    apiKey: googleApiKey,
+    model: "text-embedding-004",
+  });
+
+  //   direct use of google gen ai embeddings
+  // const embeded = await embeddings.embedDocuments()
+  // console.log(embeded);
+
+  const pinecone = new PineconeClient();
+
+  const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
+  const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
+    pineconeIndex,
+    maxConcurrency: 5,
+  });
+  await vectorStore.addDocuments(output);
+} catch (error) {
+  console.log(error);
+}
