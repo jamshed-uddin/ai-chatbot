@@ -20,7 +20,7 @@ const standaloneQuestionPrompt = ChatPromptTemplate.fromTemplate(
   standaloneQuestionTemplate
 );
 
-const answerTemplate = `You are a helpful and enthusiastic bot who can answer a given question about the july 2024 uprising in Bangladesh based on the context given. Try to find the answer in the context, if you really do not find the answer, say "I am sorry, I do not know the answer. Ask me about July 2024 uprising in Bangladesh. I would be happy to answer." Don't try to make up the answer. Always response as if you are chatting to a friend.
+const answerTemplate = `You are a helpful and enthusiastic bot who can answer a given question about the july 2024 uprising in Bangladesh based on the context given. Try to find the answer in the context, if you really do not find the answer, say "I am sorry, I do not know the answer. Ask me about July 2024 uprising in Bangladesh. I would be happy to answer." Don't try to make up the answer. Synchronous your mode( I mean emotional state if you were a human) with the given context. And avoid unnecessary greetings.
 user question: {originalQuestion}
 context: {context}
 answer: `;
@@ -61,16 +61,15 @@ const standaloneQuestionChain = standaloneQuestionPrompt
   .pipe(new StringOutputParser());
 
 const retrieverChain = RunnableSequence.from([
-  (previous) => previous.standaloneQuestion,
+  (previous) => {
+    console.log("standalone", previous);
+    return previous.standaloneQuestion;
+  },
   retriever,
   combineDocs,
 ]);
 
 const answerChain = answerPrompt.pipe(llm).pipe(new StringOutputParser());
-
-// const chain =
-//   .pipe(retriever)
-//   .pipe(answerPrompt);
 
 const chain = RunnableSequence.from([
   {
@@ -85,22 +84,11 @@ const chain = RunnableSequence.from([
     originalQuestion: (prev) => prev.originalQuestion,
     context: retrieverChain,
   },
-  answerChain,
-  (prev) => console.log("after retrieval", prev),
 
-  // {
-  //   context: (docs) => combineDocs(docs),
-  //   question: (originalQuestion) =>
-  //     console.log("original question", originalQuestion),
-  // },
+  answerChain,
 ]);
 
-const question =
-  "I heard there was lot going on in Bangladesh. There was an uprising emerged in july. what is this july uprising 2024 in Bangladesh?";
+const question = "Who was Mir Mugdho?";
 const res = await chain.invoke({ sentence: question });
-// const puncGraRes = await punctualAndGrammerChain.invoke({
-//   sentence: "i dont have liked mondays",
-// });
 
 console.log(res);
-// console.log(puncGraRes);

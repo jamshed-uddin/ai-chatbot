@@ -1,50 +1,19 @@
+import express from "express";
 import "dotenv/config.js";
+import path from "path";
+const app = express();
+const port = process.env.PORT;
 
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import fs from "fs";
+const dirname = path.resolve();
+const files = path.join(dirname, "view", "dist");
+console.log(files);
 
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+app.get("/api/query", (req, res) => {
+  res.send({ message: "user query" });
+});
 
-import { PineconeStore } from "@langchain/pinecone";
-import { Pinecone as PineconeClient } from "@pinecone-database/pinecone";
+app.use(express.static(path.join(dirname, "view", "dist")));
 
-try {
-  // get the txt from files
-  const text = fs.readFileSync("july-uprising.txt", "utf-8");
-
-  //   split the text
-  const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 500,
-    separators: ["\n\n", "\n", " ", ""],
-    chunkOverlap: 50,
-  });
-  //   splitted txt file
-  const output = await splitter.createDocuments([text]);
-
-  const googleApiKey = process.env.GOOGLE_API_KEY;
-
-  //   instantiate google gen ai embeddings
-  const embeddings = new GoogleGenerativeAIEmbeddings({
-    apiKey: googleApiKey,
-    model: "text-embedding-004",
-  });
-
-  //   direct use of google gen ai embeddings
-  // const embeded = await embeddings.embedDocuments()
-  // console.log(embeded);
-
-  //   instantiate pinecone client
-  const pinecone = new PineconeClient();
-
-  //   pinecone index
-  const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
-  //   vector store
-  const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
-    pineconeIndex,
-    maxConcurrency: 5,
-  });
-
-  await vectorStore.addDocuments(output);
-} catch (error) {
-  console.log(error);
-}
+app.listen(port, () => {
+  console.log(`server is running on port: ${port}`);
+});
