@@ -36,12 +36,21 @@ function Chatbox() {
     setMessages((prev) => [...prev, userMessage, aiMessage]);
     setInput("");
 
+    const conversationHistory = messages
+      .map((message) =>
+        message.sender === "user"
+          ? `Human: ${message.content}`
+          : `AI: ${message.content}`
+      )
+      .join(" \n ");
+
     // Simulate assistant response (in a real app, this would call an API)
     setMessageStreaming(true);
+
     try {
       const response = await fetch("http://localhost:8000/api/query", {
         method: "POST",
-        body: JSON.stringify({ userMessage: userMessage }),
+        body: JSON.stringify({ userMessage: userMessage, conversationHistory }),
         headers: { "Content-Type": "application/json" },
       });
       const reader = response.body.getReader();
