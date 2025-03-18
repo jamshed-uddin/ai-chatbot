@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
+import paperPlane from "../../public/icons8-paper-plane-24.png";
 
 // Only use named export, no default export
 function Chatbox() {
   const [messages, setMessages] = useState([
     {
-      content: "Hello! How can I help you today?",
+      content:
+        "Hello! What do you want to know about July Uprising,2024 in Bangladesh?",
       sender: "assistant",
     },
   ]);
@@ -71,6 +73,7 @@ function Chatbox() {
   };
 
   const handleKeyDown = (e) => {
+    if (window.innerWidth <= 768) return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -78,10 +81,10 @@ function Chatbox() {
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto p-4 ">
-      <div className=" rounded-lg shadow-lg flex flex-col h-full overflow-hidden border border-gray-200 backdrop-blur-[50px]">
+    <div className="flex flex-col h-screen max-w-xl mx-auto lg:p-4 ">
+      <div className=" lg:rounded-lg shadow-lg flex flex-col h-full overflow-hidden border border-gray-200 backdrop-blur-[50px]">
         {/* Chat header */}
-        <div className="p-4 border-b border-gray-200  text-primary-foreground rounded-t-lg">
+        <div className="px-4 py-3 border-b border-gray-200  text-primary-foreground rounded-t-lg">
           <h2 className="text-xl font-semibold">Echo</h2>
         </div>
 
@@ -102,9 +105,12 @@ function Chatbox() {
                 }`}
               >
                 <div> {message.content}</div>
-                {idx !== 0 && message.sender !== "user" && messageStreaming && (
-                  <div className="w-4 h-4 rounded-full bg-black"></div>
-                )}
+                {idx !== 0 &&
+                  idx === messages.length - 1 &&
+                  message.sender !== "user" &&
+                  messageStreaming && (
+                    <div className="w-4 h-4 rounded-full bg-black animate-pulse shrink-0"></div>
+                  )}
               </div>
             </div>
           ))}
@@ -112,7 +118,7 @@ function Chatbox() {
         </div>
 
         {/* Input area */}
-        <div className="p-3 border-t border-gray-200 ">
+        <div className="p-4 border-t border-gray-200 ">
           <div className="flex items-center gap-2">
             <input
               value={input}
@@ -121,8 +127,16 @@ function Chatbox() {
               placeholder="Type your message..."
               className="flex-1 focus:outline-0"
             />
-            <button onClick={handleSend} disabled={input.trim() === ""}>
-              s
+            <button
+              onClick={handleSend}
+              disabled={input.trim() === ""}
+              className="w-5 h-5"
+            >
+              <img
+                src={paperPlane}
+                alt="send button"
+                className="w-full h-full cursor-pointer"
+              />
             </button>
           </div>
         </div>
