@@ -39,10 +39,10 @@ function Chatbox() {
     const conversationHistory = messages
       .map((message) =>
         message.sender === "user"
-          ? `Human: ${message.content}`
+          ? `User: ${message.content}`
           : `AI: ${message.content}`
       )
-      .join(" \n ");
+      .join("    ");
 
     // Simulate assistant response (in a real app, this would call an API)
     setMessageStreaming(true);

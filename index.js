@@ -18,9 +18,10 @@ app.post("/api/query", async (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "Keep-alive");
-  const { content, conversationHistory } = req.body.userMessage;
+  const { content } = req.body.userMessage;
+  const { conversationHistory } = req.body;
   console.log(req.body);
-  const response = await aiResponse(content);
+  const response = await aiResponse(content, conversationHistory);
 
   for await (const chunk of response) {
     res.write(chunk);
