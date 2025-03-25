@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import paperPlane from "../../public/icons8-paper-plane-24.png";
+import ResponseSkeleton from "./ResponseSkeleton";
 
 // Only use named export, no default export
 function Chatbox() {
@@ -11,7 +12,7 @@ function Chatbox() {
     },
   ]);
 
-  const [messageStreaming, setMessageStreaming] = useState(false);
+  const [messageLoading, setMessageLoading] = useState(false);
   const [error, setError] = useState("");
   const [input, setInput] = useState("");
   const messagesEndRef = useRef(null);
@@ -30,11 +31,8 @@ function Chatbox() {
       content: input,
       sender: "user",
     };
-    const aiMessage = {
-      content: "",
-      sender: "assistent",
-    };
-    setMessages((prev) => [...prev, userMessage, aiMessage]);
+
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
     const conversationHistory = messages
@@ -45,41 +43,24 @@ function Chatbox() {
       )
       .join("    ");
 
-    // Simulate assistant response (in a real app, this would call an API)
-    setMessageStreaming(true);
+    setMessageLoading(true);
 
     try {
-      const response = await fetch("/api/query", {
+      setMessageLoading(true);
+      const response = await fetch("http://localhost:8000/api/query", {
         method: "POST",
         body: JSON.stringify({ userMessage: userMessage, conversationHistory }),
         headers: { "Content-Type": "application/json" },
       });
-      const reader = response.body.getReader();
-      console.log(reader);
-      const decoder = new TextDecoder();
-      let newMessageText = "";
-      while (true) {
-        const { done, value } = await reader.read();
+      const aiResponse = await response.json();
+      console.log(aiResponse);
+      setMessages((prev) => [...prev, aiResponse]);
 
-        if (done) {
-          setMessageStreaming(false);
-          break;
-        }
-
-        const chunk = decoder.decode(value, { stream: true });
-        newMessageText += chunk;
-
-        setMessages((prev) => {
-          const updatedMessages = [...prev];
-          updatedMessages.at(-1).content = newMessageText;
-          return updatedMessages;
-        });
-        console.log(chunk);
-      }
+      setMessageLoading(false);
     } catch (error) {
       setError("Something went wrong!");
       console.log(error);
-      setMessageStreaming(false);
+      setMessageLoading(false);
     }
   };
 
@@ -90,6 +71,8 @@ function Chatbox() {
       handleSend();
     }
   };
+  console.log(messages);
+  console.log(messageLoading);
 
   return (
     <div className="flex flex-col h-screen max-w-xl mx-auto lg:p-4 ">
@@ -116,12 +99,6 @@ function Chatbox() {
                 }`}
               >
                 <div> {message.content}</div>
-                {idx !== 0 &&
-                  idx === messages.length - 1 &&
-                  message.sender !== "user" &&
-                  messageStreaming && (
-                    <div className="w-4 h-4 rounded-full bg-black animate-pulse shrink-0"></div>
-                  )}
               </div>
             </div>
           ))}
@@ -132,6 +109,8 @@ function Chatbox() {
               </div>
             </div>
           )}
+          {messageLoading && <ResponseSkeleton />}
+
           <div ref={messagesEndRef} />
         </div>
 
@@ -147,7 +126,7 @@ function Chatbox() {
             />
             <button
               onClick={handleSend}
-              disabled={input.trim() === "" || messageStreaming}
+              disabled={input.trim() === "" || messageLoading}
               className="w-5 h-5 disabled:opacity-60"
             >
               <img

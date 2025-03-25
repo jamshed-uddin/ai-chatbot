@@ -22,27 +22,40 @@ const aiResponse = async (userQuestion, conversationHistory) => {
       standaloneQuestionTemplate
     );
 
-    const answerTemplate = `You are a helpful and enthusiastic bot who answers questions and responds to relevant statements about the July 2024 uprising in Bangladesh using both provided context and conversation history(if any). 
+    const answerTemplate = `You are an informative and context-aware bot who answers questions and responds meaningfully to relevant statements about the July 2024 uprising in Bangladesh. Use both the provided context and conversation history to ensure accurate and relevant responses.  
 
-How to answer:  
-1. If the user asks a question, find the answer in the conversation history or context.  
-2. If the user provides new information, acknowledge it and, if possible, compare it with the known facts.  
-3. If the answer is unknown, respond with: 'Sorry, I don't know the answer of you question. Feel free to ask about the July 2024 uprising in Bangladesh.' but **avoid dismissing user input outright.**  
+Guidelines:  
+- Use conversation history to infer missing context in follow-up questions.  
+- If the user provides new information, acknowledge and, if possible, compare it with known facts.  
+- If uncertain, respond with: "I am not sure about that. Feel free to ask about the July 2024 uprising in Bangladesh." Avoid dismissing statements outright.  
+- Do **not** generate false information. Keep responses concise yet clear.  
+- Match your emotional tone with the given context.  
+- Skip unnecessary greetings but greet back if greeted.  
 
-   Key Instructions:  
-- Do **not** make up any information.  
-- Keep your response concise yet complete.  
-- If the user provides a fact or update, respond naturally instead of treating it as a question. 
-- Answer **any** question that can be found in the conversation history, even if it's unrelated to the uprising. 
-- Match your tone and emotional state with the context. 
-- Avoid unnecessary greetings, but greet back if greeted.  
-
-User question: {originalQuestion}  
+User input: {originalQuestion}  
 Context: {context}  
 Conversation history: {history}  
 Answer: `;
 
     const answerPrompt = ChatPromptTemplate.fromTemplate(answerTemplate);
+
+    const convHistoryTemplate = `Summarize the key points from the conversation history while retaining relevant details for context.  
+
+Guidelines:  
+- Focus on essential facts, questions, and updates provided by the user.  
+- Remove redundant or irrelevant details to keep the summary concise.  
+- Preserve the user’s intent and important references (e.g., topics discussed, follow-ups, clarifications).  
+- If the discussion revolves around a specific event (e.g., July 2024 uprising in Bangladesh), ensure the summary maintains that context.  
+- Keep the summary brief yet informative for continued conversation understanding.  
+
+Conversation history: {fullConversation}  
+Summary: `;
+    const convHistoryPrompt =
+      ChatPromptTemplate.fromTemplate(convHistoryTemplate);
+
+    const convHistoryChain = convHistoryPrompt
+      .pipe(llm)
+      .pipe(new StringOutputParser());
 
     // standalone question chain. makes a concise question out of original question
     const standaloneQuestionChain = standaloneQuestionPrompt
@@ -69,13 +82,14 @@ Answer: `;
       {
         standaloneQuestion: standaloneQuestionChain,
         originalQuestion: ({ originalQuestion }) => originalQuestion.question,
-        history: ({ originalQuestion }) => originalQuestion.history,
+        fullConversation: ({ originalQuestion }) => originalQuestion.history,
       },
       {
         originalQuestion: (prev) => prev.originalQuestion,
-        history: (prev) => prev.history,
+        history: convHistoryChain,
         context: retrieverChain,
       },
+      // (prev) => console.log("with summary", prev),
 
       answerChain,
     ]);
@@ -83,14 +97,10 @@ Answer: `;
     // this one takes user question as sentence because there is a sentence variable in punctuation and grammer prompt.
     // const res = await chain.stream({ sentence: userQuestion });
 
-    const res = await chain.stream({
+    const res = await chain.invoke({
       question: userQuestion,
       history: conversationHistory,
     });
-    // const res = await chain.invoke({
-    //   question: userQuestion,
-    //   history: conversationHistory,
-    // });
 
     return res;
   } catch (error) {

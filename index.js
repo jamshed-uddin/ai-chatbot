@@ -10,23 +10,17 @@ app.use(express.json());
 const port = process.env.PORT;
 
 const dirname = path.resolve();
-const files = path.join(dirname, "view", "dist");
-console.log(files);
 
 app.post("/api/query", async (req, res) => {
-  console.log("hello");
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "Keep-alive");
   const { content } = req.body.userMessage;
   const { conversationHistory } = req.body;
-  console.log(req.body);
   const response = await aiResponse(content, conversationHistory);
+  console.log(response);
 
-  for await (const chunk of response) {
-    res.write(chunk);
-  }
-  res.end();
+  res.status(200).send({
+    content: response,
+    sender: "assistant",
+  });
 });
 
 app.use(express.static(path.join(dirname, "view", "dist")));
