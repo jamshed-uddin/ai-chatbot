@@ -30,7 +30,7 @@ app.post("/api/query", async (req, res) => {
 });
 
 app.use(express.static(path.join(dirname, "view", "dist")));
-app.get("*", (req, res) => {
+app.get("/", (req, res) => {
   res.sendFile(path.resolve(dirname, "view", "dist", "index.html"));
 });
 
