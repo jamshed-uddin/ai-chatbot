@@ -12,7 +12,7 @@ function Chatbox() {
   ]);
 
   const [messageStreaming, setMessageStreaming] = useState(false);
-
+  const [error, setError] = useState("");
   const [input, setInput] = useState("");
   const messagesEndRef = useRef(null);
 
@@ -23,6 +23,7 @@ function Chatbox() {
 
   const handleSend = async () => {
     if (input.trim() === "") return;
+    setError("");
 
     // Add user message
     const userMessage = {
@@ -48,7 +49,7 @@ function Chatbox() {
     setMessageStreaming(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/query", {
+      const response = await fetch("/api/query", {
         method: "POST",
         body: JSON.stringify({ userMessage: userMessage, conversationHistory }),
         headers: { "Content-Type": "application/json" },
@@ -76,6 +77,7 @@ function Chatbox() {
         console.log(chunk);
       }
     } catch (error) {
+      setError("Something went wrong!");
       console.log(error);
       setMessageStreaming(false);
     }
@@ -123,6 +125,13 @@ function Chatbox() {
               </div>
             </div>
           ))}
+          {error && (
+            <div className="flex justify-center">
+              <div className="text-xs text-center text-red-500 border border-red-400 w-fit px-4 rounded-xl py-1">
+                {error}
+              </div>
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
 
@@ -138,8 +147,8 @@ function Chatbox() {
             />
             <button
               onClick={handleSend}
-              disabled={input.trim() === ""}
-              className="w-5 h-5"
+              disabled={input.trim() === "" || messageStreaming}
+              className="w-5 h-5 disabled:opacity-60"
             >
               <img
                 src={paperPlane}
