@@ -47,7 +47,7 @@ function Chatbox() {
 
     try {
       setMessageLoading(true);
-      const response = await fetch("http://localhost:8000/api/query", {
+      const response = await fetch("/api/query", {
         method: "POST",
         body: JSON.stringify({ userMessage: userMessage, conversationHistory }),
         headers: { "Content-Type": "application/json" },
