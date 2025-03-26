@@ -9,6 +9,23 @@ import { PineconeStore } from "@langchain/pinecone";
 import { Pinecone as PineconeClient } from "@pinecone-database/pinecone";
 
 try {
+  // fetching page data from wikipedia---------
+  //   const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&explaintext=true&titles=July_Revolution_(Bangladesh)&origin=*`;
+
+  //   fetch(url)
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       const pages = data.query.pages;
+  //       const pageId = Object.keys(pages)[0]; // Get page ID dynamically
+  //       console.log(
+  //         pages[pageId].extract
+  //           .replace(/==+/g, "") // Remove "== Heading ==" symbols
+  //           .replace(/\n+/g, "\n") // Normalize multiple newlines
+  //           .trim()
+  //       ); // Wikipedia page content
+  //     })
+  //     .catch((error) => console.error("Error fetching data:", error));
+
   // get the txt from files
   const text = fs.readFileSync("july-uprising.txt", "utf-8");
 
